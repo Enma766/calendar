@@ -329,7 +329,7 @@ export default function App() {
                 <button 
                   type="submit"
                   disabled={!newEventText.trim()}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-xl transition-colors shadow-lg shadow-blue-500/30"
+                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed text-white p-2 rounded-xl transition-colors shadow-lg shadow-blue-500/30"
                 >
                   <Plus size={24} />
                 </button>
