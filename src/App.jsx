@@ -7,17 +7,17 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, Trash2, X, S
 // Instrucción: Reemplaza las URLs de abajo con las imágenes que desees para cada mes.
 // Los meses van del 0 (Enero) al 11 (Diciembre).
 const monthBackgrounds = [
-  "src/assets/calendarimg/January.jpeg", // Enero (Invierno/Nieve)
-  "src/assets/calendarimg/February.jpg", // Febrero (San Valentín/Amor)
-  "src/assets/calendarimg/March.jpeg", // Marzo (Primavera/Flores)
+  "/calendarimg/January.jpeg", // Enero (Invierno/Nieve)
+  "/calendarimg/February.jpg", // Febrero (San Valentín/Amor)
+  "/calendarimg/March.jpeg", // Marzo (Primavera/Flores)
   "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?q=80&w=1920&auto=format&fit=crop", // Abril (Lluvia/Verde)
   "https://images.unsplash.com/photo-1461301214746-1e790926d323?q=80&w=1920&auto=format&fit=crop", // Mayo (Flores/Campo)
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1920&auto=format&fit=crop", // Junio (Playa/Inicio Verano)
-  "src/assets/calendarimg/July.jpeg", // Julio (Sol/Vacaciones)
-  "src/assets/calendarimg/August.jpeg", // Agosto (Atardecer/Calor)
-  "src/assets/calendarimg/September.jpeg", // Septiembre (Otoño/Hojas)
-  "src/assets/calendarimg/October.jpeg", // Octubre (Halloween/Calabazas)
-  "src/assets/calendarimg/September.jpeg", // Noviembre (Café/Lluvia)
+  "/calendarimg/July.jpeg", // Julio (Sol/Vacaciones)
+  "/calendarimg/August.jpeg", // Agosto (Atardecer/Calor)
+  "/calendarimg/September.jpeg", // Septiembre (Otoño/Hojas)
+  "/calendarimg/October.jpeg", // Octubre (Halloween/Calabazas)
+  "/calendarimg/September.jpeg", // Noviembre (Café/Lluvia)
   "https://images.unsplash.com/photo-1482517967863-00e15c9b44be?q=80&w=1920&auto=format&fit=crop", // Diciembre (Navidad/Luces)
 ];
 
