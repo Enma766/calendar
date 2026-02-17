@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, Trash2, X, S
 // Los meses van del 0 (Enero) al 11 (Diciembre).
 const monthBackgrounds = [
   "https://images.unsplash.com/photo-1483366774974-98c92a95c93c?q=80&w=1920&auto=format&fit=crop", // Enero (Invierno/Nieve)
-  "https://images.unsplash.com/photo-1516550893923-42d28e5677af?q=80&w=1920&auto=format&fit=crop", // Febrero (San Valentín/Amor)
+  "https://pbs.twimg.com/media/GhbP_soXEAAGEX5.jpg", // Febrero (San Valentín/Amor)
   "https://images.unsplash.com/photo-1490750967868-58cb75069ed6?q=80&w=1920&auto=format&fit=crop", // Marzo (Primavera/Flores)
   "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?q=80&w=1920&auto=format&fit=crop", // Abril (Lluvia/Verde)
   "https://images.unsplash.com/photo-1461301214746-1e790926d323?q=80&w=1920&auto=format&fit=crop", // Mayo (Flores/Campo)
