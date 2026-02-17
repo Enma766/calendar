@@ -8,8 +8,8 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, Trash2, X, S
 // Los meses van del 0 (Enero) al 11 (Diciembre).
 const monthBackgrounds = [
   "https://images.unsplash.com/photo-1483366774974-98c92a95c93c?q=80&w=1920&auto=format&fit=crop", // Enero (Invierno/Nieve)
-  "https://pbs.twimg.com/media/GhbP_soXEAAGEX5.jpg", // Febrero (San Valentín/Amor)
-  "https://64.media.tumblr.com/a86432ad40e42179dc3e50d9c0787b46/a4ba0c18e0f8538f-b9/s1280x813/e04f6740a7c8adb6c1d1cfd0448f7cbb7cbefa58.png", // Marzo (Primavera/Flores)
+  "https://64.media.tumblr.com/a86432ad40e42179dc3e50d9c0787b46/a4ba0c18e0f8538f-b9/s1280x813/e04f6740a7c8adb6c1d1cfd0448f7cbb7cbefa58.png https://pbs.twimg.com/media/GhbP_soXEAAGEX5.jpg", // Febrero (San Valentín/Amor)
+  "https://pbs.twimg.com/media/GhbP_soXEAAGEX5.jpg", // Marzo (Primavera/Flores)
   "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?q=80&w=1920&auto=format&fit=crop", // Abril (Lluvia/Verde)
   "https://images.unsplash.com/photo-1461301214746-1e790926d323?q=80&w=1920&auto=format&fit=crop", // Mayo (Flores/Campo)
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1920&auto=format&fit=crop", // Junio (Playa/Inicio Verano)
