@@ -205,7 +205,7 @@ export default function App() {
       style={{ backgroundImage: `url(${monthBackgrounds[currentDate.getMonth()]})` }}
     >
       {/* Capa oscura para mejorar legibilidad general */}
-      <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
 
       <div className="relative w-full max-w-6xl flex flex-col lg:flex-row gap-6">
         
@@ -329,7 +329,7 @@ export default function App() {
                 <button 
                   type="submit"
                   disabled={!newEventText.trim()}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-xl transition-colors shadow-lg shadow-blue-500/30"
+                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed text-white p-2 rounded-xl transition-colors shadow-lg shadow-blue-500/30"
                 >
                   <Plus size={24} />
                 </button>
