@@ -7,17 +7,17 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, Trash2, X, S
 // Instrucción: Reemplaza las URLs de abajo con las imágenes que desees para cada mes.
 // Los meses van del 0 (Enero) al 11 (Diciembre).
 const monthBackgrounds = [
-  "https://images.unsplash.com/photo-1483366774974-98c92a95c93c?q=80&w=1920&auto=format&fit=crop", // Enero (Invierno/Nieve)
-  "https://64.media.tumblr.com/a86432ad40e42179dc3e50d9c0787b46/a4ba0c18e0f8538f-b9/s1280x813/e04f6740a7c8adb6c1d1cfd0448f7cbb7cbefa58.png", // Febrero (San Valentín/Amor)
-  "https://pbs.twimg.com/media/GhbP_soXEAAGEX5.jpg", // Marzo (Primavera/Flores)
+  "src/assets/calendarimg/January.jpeg", // Enero (Invierno/Nieve)
+  "src/assets/calendarimg/February.jpg", // Febrero (San Valentín/Amor)
+  "src/assets/calendarimg/March.jpeg", // Marzo (Primavera/Flores)
   "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?q=80&w=1920&auto=format&fit=crop", // Abril (Lluvia/Verde)
   "https://images.unsplash.com/photo-1461301214746-1e790926d323?q=80&w=1920&auto=format&fit=crop", // Mayo (Flores/Campo)
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1920&auto=format&fit=crop", // Junio (Playa/Inicio Verano)
-  "https://images.unsplash.com/photo-1504198266287-1659872e6584?q=80&w=1920&auto=format&fit=crop", // Julio (Sol/Vacaciones)
-  "https://images.unsplash.com/photo-1505852903341-fc8d3db10436?q=80&w=1920&auto=format&fit=crop", // Agosto (Atardecer/Calor)
-  "https://images.unsplash.com/photo-1477414348463-c0eb7f1359b6?q=80&w=1920&auto=format&fit=crop", // Septiembre (Otoño/Hojas)
-  "https://images.unsplash.com/photo-1509021436665-8f07dbf5bf1d?q=80&w=1920&auto=format&fit=crop", // Octubre (Halloween/Calabazas)
-  "https://images.unsplash.com/photo-1463130456064-07a829871796?q=80&w=1920&auto=format&fit=crop", // Noviembre (Café/Lluvia)
+  "src/assets/calendarimg/July.jpeg", // Julio (Sol/Vacaciones)
+  "src/assets/calendarimg/August.jpeg", // Agosto (Atardecer/Calor)
+  "src/assets/calendarimg/September.jpeg", // Septiembre (Otoño/Hojas)
+  "src/assets/calendarimg/October.jpeg", // Octubre (Halloween/Calabazas)
+  "src/assets/calendarimg/September.jpeg", // Noviembre (Café/Lluvia)
   "https://images.unsplash.com/photo-1482517967863-00e15c9b44be?q=80&w=1920&auto=format&fit=crop", // Diciembre (Navidad/Luces)
 ];
 
