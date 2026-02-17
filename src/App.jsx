@@ -205,7 +205,7 @@ export default function App() {
       style={{ backgroundImage: `url(${monthBackgrounds[currentDate.getMonth()]})` }}
     >
       {/* Capa oscura para mejorar legibilidad general */}
-      <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
 
       <div className="relative w-full max-w-6xl flex flex-col lg:flex-row gap-6">
         
