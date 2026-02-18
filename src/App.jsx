@@ -210,7 +210,7 @@ export default function App() {
       <div className="relative w-full max-w-6xl flex flex-col lg:flex-row gap-6">
         
         {/* --- COLUMNA IZQUIERDA: Calendario Principal --- */}
-        <div className="flex-1 bg-transparent md:bg-black/30 backdrop-blur-none md:backdrop-blur-xl border border-white/10 md:border-white/20 rounded-3xl p-4 md:p-6 shadow-none md:shadow-2xl">
+        <div className="flex-1 bg-transparent md:bg-black/30 backdrop-blur-sm md:backdrop-blur-xl border border-white/10 md:border-white/20 rounded-3xl p-4 md:p-6 shadow-none md:shadow-2xl">
           {/* Header del Calendario */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-3xl font-bold text-white drop-shadow-lg capitalize flex items-center gap-2">
