@@ -201,7 +201,7 @@ export default function App() {
 
   return (
     <div 
-      className="min-h-screen w-full flex items-center justify-center p-4 sm:p-8 transition-all duration-700 ease-in-out bg-cover bg-center bg-no-repeat bg-fixed text-slate-800"
+      className="min-h-screen w-full flex items-center justify-center p-4 sm:p-8 transition-all duration-700 ease-in-out bg-cover bg-center bg-no-repeat md:bg-fixed text-slate-800"
       style={{ backgroundImage: `url(${monthBackgrounds[currentDate.getMonth()]})` }}
     >
       {/* Capa oscura para mejorar legibilidad general */}
