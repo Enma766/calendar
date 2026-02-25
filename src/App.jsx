@@ -7,15 +7,15 @@ import { ChevronLeft, ChevronRight, Plus, Trash2, X, Star } from 'lucide-react';
 const monthBackgrounds = [
   "/calendarimg/January.jpeg",
   "/calendarimg/February.jpg",
-  "/calendarimg/March.jpeg", 
-  "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?q=80&w=800&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1461301214746-1e790926d323?q=80&w=800&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop", 
+  "/calendarimg/March.jpeg", //TODO:Arreglar formato de tamaño
+  "/calendarimg/April.jpeg", 
+  "/calendarimg/May.jpeg", 
+  "/calendarimg/June.jpeg", 
   "/calendarimg/July.jpeg", 
   "/calendarimg/August.jpeg", 
   "/calendarimg/September.jpeg", 
-  "/calendarimg/October.jpeg", 
-  "/calendarimg/November.jpeg", 
+  "/calendarimg/October.jpeg", //TODO:Arreglar formato de tamaño
+  "/calendarimg/November.jpeg", //TODO:Arreglar formato de tamaño
   "https://images.unsplash.com/photo-1482517967863-00e15c9b44be?q=80&w=800&auto=format&fit=crop", 
 ];
 
