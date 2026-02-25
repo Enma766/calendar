@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Plus, Trash2, X, Star } from 'lucide-react';
 // 🎨 CONFIGURACIÓN DE FONDOS (Para los 12 meses)
 // -----------------------------------------------------------------------------
 const monthBackgrounds = [
-  "/calendarimg/JanuaryT0.jpg",
+  "/calendarimg/January.jpg",
   "/calendarimg/February.jpg",
   "/calendarimg/March.jpg",
   "/calendarimg/April.jpeg", 
@@ -14,8 +14,8 @@ const monthBackgrounds = [
   "/calendarimg/July.jpeg", 
   "/calendarimg/August.jpeg", 
   "/calendarimg/September.jpeg", 
-  "/calendarimg/October.jpeg", //TODO:Arreglar formato de tamaño
-  "/calendarimg/NovemberT10.jpg", //TODO:Arreglar formato de tamaño
+  "/calendarimg/October.jpg", //TODO:Arreglar formato de tamaño
+  "/calendarimg/November.jpg", //TODO:Arreglar formato de tamaño
   "https://images.unsplash.com/photo-1482517967863-00e15c9b44be?q=80&w=800&auto=format&fit=crop", 
 ];
 
