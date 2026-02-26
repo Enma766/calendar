@@ -1,15 +1,14 @@
 name: Construir Android APK
 
-# Esto hace que se compile un nuevo APK cada vez que subas cambios a GitHub
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # También permite ejecutarlo manualmente
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest # Usamos una máquina virtual de Linux en GitHub
+    runs-on: ubuntu-latest
 
     steps:
       - name: 1. Descargar el código
@@ -33,7 +32,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '21'
 
       - name: 7. Dar permisos al compilador
         run: chmod +x ./android/gradlew
