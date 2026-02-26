@@ -1,0 +1,48 @@
+name: Construir Android APK
+
+# Esto hace que se compile un nuevo APK cada vez que subas cambios a GitHub
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # También permite ejecutarlo manualmente
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # Usamos una máquina virtual de Linux en GitHub
+
+    steps:
+      - name: 1. Descargar el código
+        uses: actions/checkout@v4
+
+      - name: 2. Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 3. Instalar dependencias (npm)
+        run: npm install
+
+      - name: 4. Construir la web (Vite)
+        run: npm run build
+
+      - name: 5. Sincronizar Capacitor
+        run: npx cap sync android
+
+      - name: 6. Configurar Java para Android
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: 7. Dar permisos al compilador
+        run: chmod +x ./android/gradlew
+
+      - name: 8. Construir el archivo APK
+        run: cd android && ./gradlew assembleDebug
+
+      - name: 9. Subir el APK para descargarlo
+        uses: actions/upload-artifact@v4
+        with:
+          name: mi-calendario-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
