@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Trash2, X, Star } from 'lucide-react';
+// IMPORTAMOS EL PLUGIN DE NOTIFICACIONES DE CAPACITOR
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 // -----------------------------------------------------------------------------
-// 🎨 CONFIGURACIÓN DE FONDOS (Para los 12 meses)
+// 🎨 CONFIGURACIÓN DE FONDOS
 // -----------------------------------------------------------------------------
 const monthBackgrounds = [
   "/calendarimg/January.jpg",
   "/calendarimg/February.jpg",
-  "/calendarimg/March.jpg",
+  "/calendarimg/March.jpg", 
   "/calendarimg/April.jpeg", 
   "/calendarimg/May.jpeg", 
   "/calendarimg/June.jpeg", 
@@ -19,7 +21,7 @@ const monthBackgrounds = [
   "/calendarimg/December.jpg", 
 ];
 
-const daysOfWeek = ['D', 'L', 'M', 'M', 'J', 'V', 'S']; // Letras simples para ahorrar espacio
+const daysOfWeek = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 const monthNames = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -47,7 +49,17 @@ export default function App() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [newEventText, setNewEventText] = useState("");
 
+  // Solicitar permisos de notificación al cargar la app por primera vez
   useEffect(() => {
+    const requestPermissions = async () => {
+      try {
+        await LocalNotifications.requestPermissions();
+      } catch (e) {
+        console.log("Notificaciones no soportadas en este entorno (web).");
+      }
+    };
+    requestPermissions();
+    
     localStorage.setItem('calendarEvents', JSON.stringify(events));
   }, [events]);
 
@@ -64,23 +76,67 @@ export default function App() {
 
   const formatDateKey = (date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
-  const addEvent = (e) => {
+  // FUNCIÓN ACTUALIZADA: Añade el evento y programa la notificación
+  const addEvent = async (e) => {
     e.preventDefault();
     if (!newEventText.trim()) return;
+    
     const key = formatDateKey(selectedDate);
-    const newEvent = { id: Date.now(), text: newEventText };
+    // Usamos timestamp reducido porque Capacitor requiere IDs numéricos pequeños
+    const eventId = Math.floor(Date.now() / 1000); 
+    const newEvent = { id: eventId, text: newEventText };
+    
+    // Guardar en el estado de React
     setEvents({ ...events, [key]: [...(events[key] || []), newEvent] });
     setNewEventText("");
+
+    // --- LÓGICA DE NOTIFICACIONES ---
+    try {
+      const permStatus = await LocalNotifications.checkPermissions();
+      
+      if (permStatus.display === 'granted') {
+        // Programar para el día seleccionado a las 9:00 AM
+        const notifDate = new Date(selectedDate);
+        notifDate.setHours(9, 0, 0, 0);
+
+        // Solo programamos si el evento es en el futuro
+        if (notifDate > new Date()) {
+          await LocalNotifications.schedule({
+            notifications: [
+              {
+                title: '🗓️ Evento Hoy',
+                body: newEvent.text,
+                id: eventId, // ID único para poder borrarla después
+                schedule: { at: notifDate },
+                smallIcon: 'ic_stat_icon_config_sample' // Icono por defecto Android
+              }
+            ]
+          });
+        }
+      }
+    } catch (error) {
+      console.log("No se pudo programar la notificación. Asegúrate de estar en el móvil.");
+    }
   };
 
-  const deleteEvent = (dateKey, eventId) => {
+  // FUNCIÓN ACTUALIZADA: Borra el evento y cancela la notificación
+  const deleteEvent = async (dateKey, eventId) => {
     const updatedEvents = events[dateKey].filter(ev => ev.id !== eventId);
+    
+    // Actualizar estado
     if (updatedEvents.length === 0) {
       const newEvents = { ...events };
       delete newEvents[dateKey];
       setEvents(newEvents);
     } else {
       setEvents({ ...events, [dateKey]: updatedEvents });
+    }
+
+    // Cancelar la notificación en el teléfono
+    try {
+      await LocalNotifications.cancel({ notifications: [{ id: eventId }] });
+    } catch (error) {
+      console.log("No se pudo cancelar la notificación.");
     }
   };
 
@@ -89,7 +145,6 @@ export default function App() {
     const firstDayIndex = getFirstDayOfMonth(currentDate);
     const days = [];
 
-    // Celdas vacías (días del mes anterior)
     for (let i = 0; i < firstDayIndex; i++) {
       days.push(<div key={`empty-${i}`} className="w-10 h-10 mx-auto"></div>);
     }
@@ -118,7 +173,6 @@ export default function App() {
             {day}
           </button>
           
-          {/* Indicadores debajo del número (Puntos) */}
           <div className="flex gap-1 mt-1">
             {holiday && <div className="w-1.5 h-1.5 rounded-full bg-yellow-400"></div>}
             {hasEvents && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
@@ -130,25 +184,18 @@ export default function App() {
   };
 
   return (
-    // Contenedor negro base para evitar fondos blancos indeseados en recargas
     <div className="bg-black min-h-screen w-full flex justify-center overflow-hidden font-sans">
-      
-      {/* 📱 CONTENEDOR TIPO "APP" MÓVIL (Limitamos el ancho para que en PC se siga viendo como un teléfono) */}
       <div className="w-full max-w-md h-[100dvh] relative flex flex-col shadow-2xl overflow-hidden bg-slate-900">
         
-        {/* FONDO DINÁMICO */}
         <div 
           className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
           style={{ backgroundImage: `url(${monthBackgrounds[currentDate.getMonth()]})` }}
         >
-          {/* Degradado oscuro: Más fuerte arriba y abajo para que los textos siempre se lean bien */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
         </div>
 
-        {/* CONTENIDO PRINCIPAL DEL CALENDARIO */}
         <div className="relative z-10 flex-1 flex flex-col pt-12 pb-6 px-4">
           
-          {/* Cabecera (Mes y Año) */}
           <div className="flex justify-between items-center mb-8 px-2">
             <div>
               <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-md">
@@ -176,7 +223,6 @@ export default function App() {
             Ir a Hoy
           </button>
 
-          {/* Días de la semana (L, M, M...) */}
           <div className="grid grid-cols-7 mb-4">
             {daysOfWeek.map((day, idx) => (
               <div key={idx} className="text-center text-white/60 font-medium text-sm">
@@ -185,14 +231,12 @@ export default function App() {
             ))}
           </div>
 
-          {/* Cuadrícula de números */}
           <div className="grid grid-cols-7 gap-y-2">
             {renderCalendarDays()}
           </div>
         </div>
 
-        {/* 📥 PANEL INFERIOR DE EVENTOS (Bottom Sheet) */}
-        {/* Un div oscuro que cubre la pantalla cuando el panel está abierto para hacer focus */}
+        {/* Panel inferior */}
         <div 
           className={`absolute inset-0 bg-black/50 z-40 transition-opacity duration-300 ${isPanelOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
           onClick={() => setIsPanelOpen(false)}
@@ -204,7 +248,6 @@ export default function App() {
           ${isPanelOpen ? 'translate-y-0' : 'translate-y-full'}
         `} style={{ height: '65dvh' }}>
           
-          {/* Píldora decorativa para arrastrar (visual) */}
           <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-4 mb-2"></div>
 
           <div className="px-6 py-4 flex justify-between items-center border-b border-gray-100">
@@ -221,10 +264,7 @@ export default function App() {
             </button>
           </div>
 
-          {/* Lista de eventos del día */}
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-gray-50/50">
-            
-            {/* Festivos */}
             {fixedHolidays.find(h => h.month === selectedDate.getMonth() && h.day === selectedDate.getDate()) && (
               <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-2xl flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
@@ -237,7 +277,6 @@ export default function App() {
               </div>
             )}
             
-            {/* Eventos de Usuario */}
             {events[formatDateKey(selectedDate)]?.map((event) => (
               <div key={event.id} className="bg-white border border-gray-200 p-4 rounded-2xl flex justify-between items-center shadow-sm">
                 <span className="text-slate-700 font-medium">{event.text}</span>
@@ -258,7 +297,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Formulario para añadir evento */}
           <form onSubmit={addEvent} className="p-4 bg-white border-t border-gray-100 safe-area-bottom">
             <div className="flex gap-2 bg-gray-50 p-1.5 rounded-full border border-gray-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all">
               <input 
