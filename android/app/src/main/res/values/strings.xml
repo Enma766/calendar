@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Calendario Harper</string>
+    <string name="title_activity_main">Calendario Harper</string>
+    <string name="package_name">com.enmanuel.calendario</string>
+    <string name="custom_url_scheme">com.enmanuel.calendario</string>
+</resources>

@@ -1,0 +1,6 @@
+{
+  "appId": "com.enmanuel.calendario",
+  "appName": "Calendario Harper",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
