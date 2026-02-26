@@ -25,14 +25,14 @@ jobs:
       - name: 4. Construir la web (Vite)
         run: npm run build
 
-      - name: 5. Sincronizar Capacitor
-        run: npx cap sync android
-
-      - name: 6. Configurar Java para Android
+      - name: 5. Configurar Java para Android
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '21'
+
+      - name: 6. Sincronizar Capacitor
+        run: npx cap sync android
 
       - name: 7. Dar permisos al compilador
         run: chmod +x ./android/gradlew
