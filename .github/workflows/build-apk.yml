@@ -39,9 +39,19 @@ jobs:
 
       - name: 8. Construir el archivo APK
         run: cd android && ./gradlew assembleDebug
+      
+      - name: 9. Extraer versión del package.json
+        id: version
+        run: |
+          APP_VERSION=$(node -p "require('./package.json').version")
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
 
-      - name: 9. Subir el APK para descargarlo
+      - name: 10. Renombrar APK
+        run: |
+          mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/MiCalendario-v${{ env.APP_VERSION }}.apk
+
+      - name: 11. Subir el APK final
         uses: actions/upload-artifact@v4
         with:
-          name: mi-calendario-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: MiCalendario-v${{ env.APP_VERSION }}
+          path: android/app/build/outputs/apk/debug/MiCalendario-v${{ env.APP_VERSION }}.apk
