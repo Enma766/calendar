@@ -40,18 +40,12 @@ jobs:
       - name: 8. Construir el archivo APK
         run: cd android && ./gradlew assembleDebug
       
-      - name: 9. Extraer versión del package.json
-        id: version
+      - name: 9. Renombrar APK
         run: |
-          APP_VERSION=$(node -p "require('./package.json').version")
-          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+          mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/CalendarioHarper.apk
 
-      - name: 10. Renombrar APK
-        run: |
-          mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/MiCalendario-v${{ env.APP_VERSION }}.apk
-
-      - name: 11. Subir el APK final
+      - name: 10. Subir el APK final
         uses: actions/upload-artifact@v4
         with:
-          name: MiCalendario-v${{ env.APP_VERSION }}
-          path: android/app/build/outputs/apk/debug/MiCalendario-v${{ env.APP_VERSION }}.apk
+          name: CalendarioHarper
+          path: android/app/build/outputs/apk/debug/CalendarioHarper.apk

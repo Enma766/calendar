@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Trash2, X, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, X, Star, Clock, RotateCw } from 'lucide-react';
 // IMPORTAMOS EL PLUGIN DE NOTIFICACIONES DE CAPACITOR
 import { LocalNotifications } from '@capacitor/local-notifications';
 
@@ -48,6 +48,9 @@ export default function App() {
   });
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [newEventText, setNewEventText] = useState("");
+  const [newEventTime, setNewEventTime] = useState(""); // Formato HH:MM
+  const [isAnnual, setIsAnnual] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   // Solicitar permisos de notificación al cargar la app por primera vez
   useEffect(() => {
@@ -76,68 +79,117 @@ export default function App() {
 
   const formatDateKey = (date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
+  const formatAnnualKey = (date) => `${date.getMonth()}-${date.getDate()}`;
   // FUNCIÓN ACTUALIZADA: Añade el evento y programa la notificación
   const addEvent = async (e) => {
     e.preventDefault();
     if (!newEventText.trim()) return;
     
-    const key = formatDateKey(selectedDate);
-    // Usamos timestamp reducido porque Capacitor requiere IDs numéricos pequeños
+    // Si es anual, la llave solo tiene mes y día. Si no, tiene año, mes y día.
+    const key = isAnnual ? formatAnnualKey(selectedDate) : formatDateKey(selectedDate);
     const eventId = Math.floor(Date.now() / 1000); 
-    const newEvent = { id: eventId, text: newEventText };
     
-    // Guardar en el estado de React
+    const newEvent = { 
+      id: eventId, 
+      text: newEventText,
+      time: newEventTime, // Guardamos la hora (puede estar vacía)
+      isAnnual: isAnnual  // Guardamos si se repite cada año
+    };
+    
     setEvents({ ...events, [key]: [...(events[key] || []), newEvent] });
+    
+    // Limpiamos el formulario
     setNewEventText("");
+    setNewEventTime("");
+    setIsAnnual(false);
+    setShowTimePicker(false);
 
     // --- LÓGICA DE NOTIFICACIONES ---
     try {
       const permStatus = await LocalNotifications.checkPermissions();
       
       if (permStatus.display === 'granted') {
-        // Programar para el día seleccionado a las 9:00 AM
         const notifDate = new Date(selectedDate);
-        notifDate.setHours(9, 0, 0, 0);
+        
+        // Si el usuario eligió una hora, configuramos esa hora
+        if (newEvent.time) {
+          const [hours, minutes] = newEvent.time.split(':');
+          notifDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+        } else {
+          // Si no eligió hora, por defecto a las 9:00 AM
+          notifDate.setHours(9, 0, 0, 0);
+        }
 
-        // Solo programamos si el evento es en el futuro
-        if (notifDate > new Date()) {
+        if (notifDate > new Date() || newEvent.isAnnual) {
+          // Si el evento es en el pasado pero es anual, programamos para el próximo año
+          if (notifDate <= new Date() && newEvent.isAnnual) {
+             notifDate.setFullYear(new Date().getFullYear() + 1);
+          }
+          
+          let scheduleOptions = { at: notifDate };
+          
+          // Si es anual, le decimos a Capacitor que lo repita cada año
+          if (newEvent.isAnnual) {
+            scheduleOptions = {
+               on: {
+                  month: notifDate.getMonth() + 1, // Capacitor usa meses 1-12
+                  day: notifDate.getDate(),
+                  hour: notifDate.getHours(),
+                  minute: notifDate.getMinutes()
+               }
+            }
+          }
+
           await LocalNotifications.schedule({
             notifications: [
               {
-                title: '🗓️ Evento Hoy',
+                title: newEvent.isAnnual ? '🎉 Celebración Hoy' : '🗓️ Evento Hoy',
                 body: newEvent.text,
-                id: eventId, // ID único para poder borrarla después
-                schedule: { at: notifDate },
-                smallIcon: 'ic_stat_icon_config_sample' // Icono por defecto Android
+                id: eventId,
+                schedule: scheduleOptions,
+                smallIcon: 'ic_stat_icon_config_sample'
               }
             ]
           });
         }
       }
     } catch (error) {
-      console.log("No se pudo programar la notificación. Asegúrate de estar en el móvil.");
+      console.log("No se pudo programar la notificación.");
     }
   };
 
   // FUNCIÓN ACTUALIZADA: Borra el evento y cancela la notificación
-  const deleteEvent = async (dateKey, eventId) => {
-    const updatedEvents = events[dateKey].filter(ev => ev.id !== eventId);
+  const deleteEvent = async (dateKey, eventId, isEventAnnual) => {
+    // Determinamos qué llave usar para borrar basándonos en si el evento es anual
+    const keyToDelete = isEventAnnual ? dateKey.split('-').slice(1).join('-') : dateKey;
+    const actualKey = isEventAnnual ? keyToDelete : dateKey;
+
+    const updatedEvents = events[actualKey].filter(ev => ev.id !== eventId);
     
-    // Actualizar estado
     if (updatedEvents.length === 0) {
       const newEvents = { ...events };
-      delete newEvents[dateKey];
+      delete newEvents[actualKey];
       setEvents(newEvents);
     } else {
-      setEvents({ ...events, [dateKey]: updatedEvents });
+      setEvents({ ...events, [actualKey]: updatedEvents });
     }
 
-    // Cancelar la notificación en el teléfono
     try {
       await LocalNotifications.cancel({ notifications: [{ id: eventId }] });
     } catch (error) {
       console.log("No se pudo cancelar la notificación.");
     }
+  };
+
+  // FUNCIÓN NUEVA: Obtiene todos los eventos de un día (normales + anuales)
+  const getEventsForDay = (date) => {
+    const normalKey = formatDateKey(date);
+    const annualKey = formatAnnualKey(date);
+    
+    const normalEvents = events[normalKey] || [];
+    const annualEvents = events[annualKey] || [];
+    
+    return [...normalEvents, ...annualEvents];
   };
 
   const renderCalendarDays = () => {
@@ -151,12 +203,12 @@ export default function App() {
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dateToCheck = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-      const dateKey = formatDateKey(dateToCheck);
-      
       const isToday = new Date().toDateString() === dateToCheck.toDateString();
       const isSelected = selectedDate.toDateString() === dateToCheck.toDateString();
       const holiday = fixedHolidays.find(h => h.month === currentDate.getMonth() && h.day === day);
-      const dayEvents = events[dateKey] || [];
+      
+      // NUEVO: Usamos la nueva función para obtener todos los eventos del día
+      const dayEvents = getEventsForDay(dateToCheck);
       const hasEvents = dayEvents.length > 0;
 
       days.push(
@@ -246,7 +298,7 @@ export default function App() {
           absolute bottom-0 left-0 w-full bg-white rounded-t-[2rem] z-50 flex flex-col
           transition-transform duration-300 ease-out transform shadow-[0_-10px_40px_rgba(0,0,0,0.3)]
           ${isPanelOpen ? 'translate-y-0' : 'translate-y-full'}
-        `} style={{ height: '65dvh' }}>
+        `} style={{ height: '70dvh' }}> {/* Aumenté un poco la altura para el nuevo formulario */}
           
           <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-4 mb-2"></div>
 
@@ -265,6 +317,7 @@ export default function App() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-gray-50/50">
+            {/* Festivos */}
             {fixedHolidays.find(h => h.month === selectedDate.getMonth() && h.day === selectedDate.getDate()) && (
               <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-2xl flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
@@ -277,16 +330,34 @@ export default function App() {
               </div>
             )}
             
-            {events[formatDateKey(selectedDate)]?.map((event) => (
+            {/* Eventos de Usuario Actualizados con Hora y Repetición */}
+            {getEventsForDay(selectedDate).map((event) => (
               <div key={event.id} className="bg-white border border-gray-200 p-4 rounded-2xl flex justify-between items-center shadow-sm">
-                <span className="text-slate-700 font-medium">{event.text}</span>
-                <button onClick={() => deleteEvent(formatDateKey(selectedDate), event.id)} className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100">
+                <div className="flex flex-col">
+                  <span className="text-slate-700 font-medium">{event.text}</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    {event.time && (
+                      <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md font-semibold flex items-center gap-1">
+                        <Clock size={10} /> {event.time}
+                      </span>
+                    )}
+                    {event.isAnnual && (
+                      <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md font-semibold flex items-center gap-1">
+                        <RotateCw size={10} /> Cada año
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button 
+                  onClick={() => deleteEvent(formatDateKey(selectedDate), event.id, event.isAnnual)} 
+                  className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 flex-shrink-0"
+                >
                   <Trash2 size={16} />
                 </button>
               </div>
             ))}
 
-            {(!events[formatDateKey(selectedDate)]?.length && !fixedHolidays.find(h => h.month === selectedDate.getMonth() && h.day === selectedDate.getDate())) && (
+            {(!getEventsForDay(selectedDate).length && !fixedHolidays.find(h => h.month === selectedDate.getMonth() && h.day === selectedDate.getDate())) && (
               <div className="text-center py-10 flex flex-col items-center">
                 <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3">
                   <Star className="w-8 h-8 text-gray-300" />
@@ -297,7 +368,9 @@ export default function App() {
             )}
           </div>
 
-          <form onSubmit={addEvent} className="p-4 bg-white border-t border-gray-100 safe-area-bottom">
+          {/* Formulario para añadir evento MEJORADO */}
+          <form onSubmit={addEvent} className="p-4 bg-white border-t border-gray-100 safe-area-bottom flex flex-col gap-3">
+            
             <div className="flex gap-2 bg-gray-50 p-1.5 rounded-full border border-gray-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all">
               <input 
                 type="text" 
@@ -314,6 +387,40 @@ export default function App() {
                 <Plus size={20} />
               </button>
             </div>
+
+            {/* Opciones Adicionales (Hora y Anual) */}
+            <div className="flex justify-between items-center px-2">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowTimePicker(!showTimePicker)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors border ${showTimePicker || newEventTime ? 'bg-blue-100 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-500'}`}
+                >
+                  <Clock size={14} />
+                  {newEventTime || 'Hora'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsAnnual(!isAnnual)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors border ${isAnnual ? 'bg-purple-100 border-purple-200 text-purple-700' : 'bg-white border-gray-200 text-gray-500'}`}
+                >
+                  <RotateCw size={14} />
+                  Anual
+                </button>
+              </div>
+              
+              {/* Selector de hora nativo (aparece si se activa el botón) */}
+              {showTimePicker && (
+                <input 
+                  type="time" 
+                  value={newEventTime}
+                  onChange={(e) => setNewEventTime(e.target.value)}
+                  className="bg-gray-100 border border-gray-200 rounded-lg px-2 py-1 text-sm text-gray-700 outline-none focus:border-blue-400"
+                />
+              )}
+            </div>
+
           </form>
         </div>
 
