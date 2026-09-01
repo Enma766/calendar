@@ -48,11 +48,11 @@ export default function App() {
   });
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [newEventText, setNewEventText] = useState("");
+  // NUEVOS ESTADOS PARA HORA Y REPETICIÓN
   const [newEventTime, setNewEventTime] = useState(""); // Formato HH:MM
-  const [isAnnual, setIsAnnual] = useState(false);
+  const [recurrence, setRecurrence] = useState("none"); // none, daily, weekly, monthly, annual
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  // Solicitar permisos de notificación al cargar la app por primera vez
   useEffect(() => {
     const requestPermissions = async () => {
       try {
@@ -78,22 +78,35 @@ export default function App() {
   };
 
   const formatDateKey = (date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  
+  // FUNCIONES PARA LLAVES RECURRENTES
+  const formatAnnualKey = (date) => `annual-${date.getMonth()}-${date.getDate()}`;
+  const formatMonthlyKey = (date) => `monthly-${date.getDate()}`;
+  const formatWeeklyKey = (date) => `weekly-${date.getDay()}`; // 0-6 (Dom-Sab)
+  const formatDailyKey = () => `daily-all`;
 
-  const formatAnnualKey = (date) => `${date.getMonth()}-${date.getDate()}`;
-  // FUNCIÓN ACTUALIZADA: Añade el evento y programa la notificación
+  // FUNCIÓN ACTUALIZADA: Añade el evento con múltiples tipos de repetición
   const addEvent = async (e) => {
     e.preventDefault();
     if (!newEventText.trim()) return;
     
-    // Si es anual, la llave solo tiene mes y día. Si no, tiene año, mes y día.
-    const key = isAnnual ? formatAnnualKey(selectedDate) : formatDateKey(selectedDate);
+    // Determinar la llave correcta según la repetición
+    let key;
+    switch (recurrence) {
+      case 'annual': key = formatAnnualKey(selectedDate); break;
+      case 'monthly': key = formatMonthlyKey(selectedDate); break;
+      case 'weekly': key = formatWeeklyKey(selectedDate); break;
+      case 'daily': key = formatDailyKey(); break;
+      default: key = formatDateKey(selectedDate); break; // none
+    }
+
     const eventId = Math.floor(Date.now() / 1000); 
     
     const newEvent = { 
       id: eventId, 
       text: newEventText,
-      time: newEventTime, // Guardamos la hora (puede estar vacía)
-      isAnnual: isAnnual  // Guardamos si se repite cada año
+      time: newEventTime,
+      recurrence: recurrence // Guardamos el tipo de repetición
     };
     
     setEvents({ ...events, [key]: [...(events[key] || []), newEvent] });
@@ -101,49 +114,48 @@ export default function App() {
     // Limpiamos el formulario
     setNewEventText("");
     setNewEventTime("");
-    setIsAnnual(false);
+    setRecurrence("none");
     setShowTimePicker(false);
 
-    // --- LÓGICA DE NOTIFICACIONES ---
     try {
       const permStatus = await LocalNotifications.checkPermissions();
       
       if (permStatus.display === 'granted') {
         const notifDate = new Date(selectedDate);
         
-        // Si el usuario eligió una hora, configuramos esa hora
         if (newEvent.time) {
           const [hours, minutes] = newEvent.time.split(':');
           notifDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
         } else {
-          // Si no eligió hora, por defecto a las 9:00 AM
           notifDate.setHours(9, 0, 0, 0);
         }
 
-        if (notifDate > new Date() || newEvent.isAnnual) {
-          // Si el evento es en el pasado pero es anual, programamos para el próximo año
-          if (notifDate <= new Date() && newEvent.isAnnual) {
-             notifDate.setFullYear(new Date().getFullYear() + 1);
+        if (notifDate > new Date() || newEvent.recurrence !== 'none') {
+          // Ajustar fecha para notificaciones en el pasado que se repiten
+          if (notifDate <= new Date() && newEvent.recurrence !== 'none') {
+            if (newEvent.recurrence === 'daily') notifDate.setDate(new Date().getDate() + 1);
+            else if (newEvent.recurrence === 'weekly') notifDate.setDate(new Date().getDate() + 7);
+            else if (newEvent.recurrence === 'monthly') notifDate.setMonth(new Date().getMonth() + 1);
+            else if (newEvent.recurrence === 'annual') notifDate.setFullYear(new Date().getFullYear() + 1);
           }
           
           let scheduleOptions = { at: notifDate };
           
-          // Si es anual, le decimos a Capacitor que lo repita cada año
-          if (newEvent.isAnnual) {
-            scheduleOptions = {
-               on: {
-                  month: notifDate.getMonth() + 1, // Capacitor usa meses 1-12
-                  day: notifDate.getDate(),
-                  hour: notifDate.getHours(),
-                  minute: notifDate.getMinutes()
-               }
-            }
+          // Configurar repetición en Capacitor
+          if (newEvent.recurrence === 'annual') {
+            scheduleOptions = { on: { month: notifDate.getMonth() + 1, day: notifDate.getDate(), hour: notifDate.getHours(), minute: notifDate.getMinutes() } };
+          } else if (newEvent.recurrence === 'monthly') {
+             scheduleOptions = { on: { day: notifDate.getDate(), hour: notifDate.getHours(), minute: notifDate.getMinutes() } };
+          } else if (newEvent.recurrence === 'weekly') {
+             scheduleOptions = { on: { weekday: notifDate.getDay() + 1, hour: notifDate.getHours(), minute: notifDate.getMinutes() } }; // Capacitor usa 1-7
+          } else if (newEvent.recurrence === 'daily') {
+             scheduleOptions = { on: { hour: notifDate.getHours(), minute: notifDate.getMinutes() } };
           }
 
           await LocalNotifications.schedule({
             notifications: [
               {
-                title: newEvent.isAnnual ? '🎉 Celebración Hoy' : '🗓️ Evento Hoy',
+                title: newEvent.recurrence !== 'none' ? '🔁 Evento Recurrente' : '🗓️ Evento Hoy',
                 body: newEvent.text,
                 id: eventId,
                 schedule: scheduleOptions,
@@ -158,20 +170,27 @@ export default function App() {
     }
   };
 
-  // FUNCIÓN ACTUALIZADA: Borra el evento y cancela la notificación
-  const deleteEvent = async (dateKey, eventId, isEventAnnual) => {
-    // Determinamos qué llave usar para borrar basándonos en si el evento es anual
-    const keyToDelete = isEventAnnual ? dateKey.split('-').slice(1).join('-') : dateKey;
-    const actualKey = isEventAnnual ? keyToDelete : dateKey;
+  const deleteEvent = async (dateKey, eventId, eventRecurrence) => {
+    // Determinar qué llave borrar
+    let keyToDelete;
+    const dateParts = dateKey.split('-'); // [YYYY, MM, DD] o partes de recurrencia
+    
+    switch (eventRecurrence) {
+      case 'annual': keyToDelete = `annual-${dateParts[1]}-${dateParts[2]}`; break;
+      case 'monthly': keyToDelete = `monthly-${dateParts[2]}`; break;
+      case 'weekly': keyToDelete = formatWeeklyKey(new Date(dateParts[0], dateParts[1], dateParts[2])); break; // Necesitamos el dia de la semana
+      case 'daily': keyToDelete = formatDailyKey(); break;
+      default: keyToDelete = dateKey; break; // none
+    }
 
-    const updatedEvents = events[actualKey].filter(ev => ev.id !== eventId);
+    const updatedEvents = events[keyToDelete].filter(ev => ev.id !== eventId);
     
     if (updatedEvents.length === 0) {
       const newEvents = { ...events };
-      delete newEvents[actualKey];
+      delete newEvents[keyToDelete];
       setEvents(newEvents);
     } else {
-      setEvents({ ...events, [actualKey]: updatedEvents });
+      setEvents({ ...events, [keyToDelete]: updatedEvents });
     }
 
     try {
@@ -181,15 +200,21 @@ export default function App() {
     }
   };
 
-  // FUNCIÓN NUEVA: Obtiene todos los eventos de un día (normales + anuales)
+  // FUNCIÓN ACTUALIZADA: Obtiene todos los eventos de un día
   const getEventsForDay = (date) => {
     const normalKey = formatDateKey(date);
     const annualKey = formatAnnualKey(date);
+    const monthlyKey = formatMonthlyKey(date);
+    const weeklyKey = formatWeeklyKey(date);
+    const dailyKey = formatDailyKey();
     
     const normalEvents = events[normalKey] || [];
     const annualEvents = events[annualKey] || [];
+    const monthlyEvents = events[monthlyKey] || [];
+    const weeklyEvents = events[weeklyKey] || [];
+    const dailyEvents = events[dailyKey] || [];
     
-    return [...normalEvents, ...annualEvents];
+    return [...normalEvents, ...annualEvents, ...monthlyEvents, ...weeklyEvents, ...dailyEvents];
   };
 
   const renderCalendarDays = () => {
@@ -330,26 +355,30 @@ export default function App() {
               </div>
             )}
             
-            {/* Eventos de Usuario Actualizados con Hora y Repetición */}
+            {/* Eventos de Usuario Actualizados con Hora y Repetición Múltiple */}
             {getEventsForDay(selectedDate).map((event) => (
               <div key={event.id} className="bg-white border border-gray-200 p-4 rounded-2xl flex justify-between items-center shadow-sm">
                 <div className="flex flex-col">
                   <span className="text-slate-700 font-medium">{event.text}</span>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
                     {event.time && (
                       <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md font-semibold flex items-center gap-1">
                         <Clock size={10} /> {event.time}
                       </span>
                     )}
-                    {event.isAnnual && (
+                    {event.recurrence && event.recurrence !== 'none' && (
                       <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md font-semibold flex items-center gap-1">
-                        <RotateCw size={10} /> Cada año
+                        <RotateCw size={10} /> 
+                        {event.recurrence === 'daily' && "Diario"}
+                        {event.recurrence === 'weekly' && "Semanal"}
+                        {event.recurrence === 'monthly' && "Mensual"}
+                        {event.recurrence === 'annual' && "Anual"}
                       </span>
                     )}
                   </div>
                 </div>
                 <button 
-                  onClick={() => deleteEvent(formatDateKey(selectedDate), event.id, event.isAnnual)} 
+                  onClick={() => deleteEvent(formatDateKey(selectedDate), event.id, event.recurrence)} 
                   className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 flex-shrink-0"
                 >
                   <Trash2 size={16} />
@@ -400,14 +429,23 @@ export default function App() {
                   {newEventTime || 'Hora'}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsAnnual(!isAnnual)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors border ${isAnnual ? 'bg-purple-100 border-purple-200 text-purple-700' : 'bg-white border-gray-200 text-gray-500'}`}
-                >
-                  <RotateCw size={14} />
-                  Anual
-                </button>
+                {/* Nuevo Selector de Repetición */}
+                <div className="relative flex items-center">
+                   <div className="absolute left-2 pointer-events-none">
+                      <RotateCw size={14} className={recurrence !== 'none' ? 'text-purple-700' : 'text-gray-500'} />
+                   </div>
+                  <select
+                    value={recurrence}
+                    onChange={(e) => setRecurrence(e.target.value)}
+                    className={`pl-7 pr-8 py-1.5 rounded-full text-xs font-semibold appearance-none outline-none border transition-colors cursor-pointer ${recurrence !== 'none' ? 'bg-purple-100 border-purple-200 text-purple-700' : 'bg-white border-gray-200 text-gray-500'}`}
+                  >
+                    <option value="none">No repetir</option>
+                    <option value="daily">Diario</option>
+                    <option value="weekly">Semanal</option>
+                    <option value="monthly">Mensual</option>
+                    <option value="annual">Anual</option>
+                  </select>
+                </div>
               </div>
               
               {/* Selector de hora nativo (aparece si se activa el botón) */}
